@@ -5,6 +5,21 @@ output: html_document
 
 Read the data
 ```{r}
-newdata <- read.csv("activity.csv")
-summary(newdata)
+rawdata <- read.csv("activity.csv")
+summary(rawdata)
 ```
+
+
+Find the steps per day (spd), plot histogram and report mean and median
+```{r}
+library(dplyr)
+days <-group_by(rawdata, date)
+spd <- summarize(days, steps=sum(steps))
+
+hist(spd$steps,
+        xlab="Steps per day",
+        col="red")
+
+summary(spd)
+```
+
