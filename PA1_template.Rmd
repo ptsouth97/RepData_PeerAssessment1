@@ -10,7 +10,7 @@ summary(rawdata)
 ```
 
 
-Find the steps per day (spd), plot histogram and report mean and median
+What is the mean total number of steps taken per day?
 ```{r}
 library(dplyr)
 days <-group_by(rawdata, date)
@@ -21,5 +21,22 @@ hist(spd$steps,
         col="red")
 
 summary(spd)
+```
+
+What is the average daily activity pattern?
+```{r}
+int <- group_by(rawdata, interval)
+ast <- summarize(int, steps=mean(steps, na.rm = TRUE))
+with(ast, plot(interval, steps))
+```
+
+Imputing missing values
+```{r}
+
+```
+
+Are there any differences in activity patterns between weekdays and weekends?
+```{r}
+
 ```
 
