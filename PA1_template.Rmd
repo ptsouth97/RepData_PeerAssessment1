@@ -27,12 +27,20 @@ What is the average daily activity pattern?
 ```{r}
 int <- group_by(rawdata, interval)
 ast <- summarize(int, steps=mean(steps, na.rm = TRUE))
-with(ast, plot(interval, steps))
+with(ast, plot(interval, steps, type = "l"))
 ```
 
 Imputing missing values
 ```{r}
-
+sum(is.na(rawdata))
+intavg <- summarize(int, steps=mean(steps, na.rm = TRUE))
+for(i in 1:17568){
+     if(is.na(rawdata[i,1])==TRUE){
+          findint <- rawdata[i,3]
+          rawdata[i,1] <- intavg[i*5-5,2]
+     }
+}
+summary(rawdata)
 ```
 
 Are there any differences in activity patterns between weekdays and weekends?
