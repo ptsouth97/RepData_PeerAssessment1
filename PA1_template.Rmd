@@ -17,6 +17,7 @@ days <-group_by(rawdata, date)
 spd <- summarize(days, steps=sum(steps))
 
 hist(spd$steps,
+        main="Histogram With NAs Removed",
         xlab="Steps per day",
         col="red")
 
@@ -32,19 +33,49 @@ with(ast, plot(interval, steps, type = "l"))
 
 Imputing missing values
 ```{r}
-sum(is.na(rawdata))
+impdata <- rawdata
+sum(is.na(impdata))
 intavg <- summarize(int, steps=mean(steps, na.rm = TRUE))
-for(i in 1:17568){
-     if(is.na(rawdata[i,1])==TRUE){
-          findint <- rawdata[i,3]
-          rawdata[i,1] <- intavg[i*5-5,2]
+length<-nrow(impdata)
+for(i in 1:length){
+     if(is.na(impdata[i,1])==TRUE){
+          reg_exp <- paste("^", impdata[i,3], "$", sep = "")
+          findint <- grep(reg_exp, intavg$interval)
+          impdata[i,1] <- intavg[findint,2]
      }
 }
-summary(rawdata)
+days2 <-group_by(impdata, date)
+spd2 <- summarize(days2, steps=sum(steps))
+hist(spd2$steps,
+        main="Histogram With Imputed Values",
+        xlab="Steps per day",
+        col="red")
+
+summary(spd2)
 ```
 
 Are there any differences in activity patterns between weekdays and weekends?
 ```{r}
+impdata$day <- ifelse(weekdays(as.POSIXct(impdata$date))=="Saturday"|
+                      weekdays(as.POSIXct(impdata$date))=="Sunday", 
+                      "weekend", "weekday")
 
+int2<- group_by(impdata, interval)
+ast2 <- summarize(int2, steps=mean(steps, na.rm = TRUE))
+
+weekdays <- filter(impdata, day=="weekday")
+wkdaysint<- group_by(weekdays, interval)
+wkdaysast <- summarize(wkdaysint, steps=mean(steps, na.rm = TRUE))
+wkdaysast$day <- "weekday"
+
+weekends <- filter(impdata, day=="weekend")
+wkendsint<- group_by(weekends, interval)
+wkendsast <- summarize(wkendsint, steps=mean(steps, na.rm = TRUE))
+wkendsast$day <- "weekend"
+
+rbind(wkdaysast, wkendsast)
+
+library(lattice)
+xyplot(steps ~ interval | day, data = recombined, layout = c(1,2), type = "l")
 ```
 
