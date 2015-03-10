@@ -3,39 +3,52 @@ title: "PA1_template"
 output: html_document
 ---
 
-Read the data
-```{r}
+Loading and preprocessing the data
+```{r Loading and preprocessing the data, echo=TRUE, results="hide"}
 rawdata <- read.csv("activity.csv")
-summary(rawdata)
+library(dplyr)
 ```
 
 
 What is the mean total number of steps taken per day?
-```{r}
-library(dplyr)
+```{r Mean total number of steps taken per day, echo=TRUE}
+# Group the raw data by date
 days <-group_by(rawdata, date)
+# Add up the steps per day (spd)
 spd <- summarize(days, steps=sum(steps))
-
+# Plot a histogram of the total steps per day (spd) with NAs removed
 hist(spd$steps,
         main="Histogram With NAs Removed",
         xlab="Steps per day",
         col="red")
-
-summary(spd)
+# Calculate the mean and median of the total number of steps taken per day
+summary(spd$steps)
 ```
 
 What is the average daily activity pattern?
-```{r}
+```{r Average daily activity pattern, echo=TRUE}
+# Group the raw data by interval
 int <- group_by(rawdata, interval)
+# Find the average steps taken (ast) for each interval removing NAs
 ast <- summarize(int, steps=mean(steps, na.rm = TRUE))
+# Plot a time series of the 5-minute interval and ast
 with(ast, plot(interval, steps, type = "l"))
+# Find which 5-minute interval contains the max number of steps
+maxsteps <- max(ast$steps)
+maxfinder <- grep(maxsteps, ast$steps)
+ast[maxfinder, 1]
 ```
 
 Imputing missing values
-```{r}
+```{r Imputing missing values, echo=TRUE}
+# make a copy of the raw data that will hold the imputed values
 impdata <- rawdata
+# calculate how many NAs are in the dataset
 sum(is.na(impdata))
+# calculate the average steps taken in each interval without NAs
 intavg <- summarize(int, steps=mean(steps, na.rm = TRUE))
+# loop through and impute the average for each interval to corresponding
+# intervals that have NAs
 length<-nrow(impdata)
 for(i in 1:length){
      if(is.na(impdata[i,1])==TRUE){
@@ -44,37 +57,47 @@ for(i in 1:length){
           impdata[i,1] <- intavg[findint,2]
      }
 }
+# group the imputed data by days
 days2 <-group_by(impdata, date)
+# calculate the total number of steps taken per day (spd)
 spd2 <- summarize(days2, steps=sum(steps))
+# plot a histogram of the steps per day with imputed values
 hist(spd2$steps,
         main="Histogram With Imputed Values",
         xlab="Steps per day",
         col="red")
-
-summary(spd2)
+# Calculate the mean and median of the total number of steps taken per day
+summary(spd2$steps)
 ```
 
 Are there any differences in activity patterns between weekdays and weekends?
-```{r}
+```{r Differences in activity patterns between weekdays and weekends, echo=TRUE}
+# assign each day to a day of the week and then create a new column that
+# holds whether that day is a weekday or weekend
 impdata$day <- ifelse(weekdays(as.POSIXct(impdata$date))=="Saturday"|
                       weekdays(as.POSIXct(impdata$date))=="Sunday", 
                       "weekend", "weekday")
 
-int2<- group_by(impdata, interval)
-ast2 <- summarize(int2, steps=mean(steps, na.rm = TRUE))
-
+# filter the imputed data by "weekday"
 weekdays <- filter(impdata, day=="weekday")
+# group the weekdays by interval
 wkdaysint<- group_by(weekdays, interval)
+# find the average steps taken (ast) for weekday intervals
 wkdaysast <- summarize(wkdaysint, steps=mean(steps, na.rm = TRUE))
+# create a new column to identify the data as a "weekday"
 wkdaysast$day <- "weekday"
 
+# repeat the same process for the weekends
 weekends <- filter(impdata, day=="weekend")
 wkendsint<- group_by(weekends, interval)
 wkendsast <- summarize(wkendsint, steps=mean(steps, na.rm = TRUE))
 wkendsast$day <- "weekend"
 
-rbind(wkdaysast, wkendsast)
+# recombine the weekdays and weekends by row binding
+recombined <- rbind(wkdaysast, wkendsast)
 
+# plot steps vs the interval for the recombined data using the "day" as
+# a factor
 library(lattice)
 xyplot(steps ~ interval | day, data = recombined, layout = c(1,2), type = "l")
 ```
