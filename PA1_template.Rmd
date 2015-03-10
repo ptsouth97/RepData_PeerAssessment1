@@ -65,7 +65,7 @@ spd2 <- summarize(days2, steps=sum(steps))
 hist(spd2$steps,
         main="Histogram With Imputed Values",
         xlab="Steps per day",
-        col="red")
+        col="blue")
 # Calculate the mean and median of the total number of steps taken per day
 summary(spd2$steps)
 ```
